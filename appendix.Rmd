@@ -1,0 +1,497 @@
+---
+title: "Appendix"
+subtitle: |
+  | 
+  | 
+  | To the manuscript 'Plots, Attacks, and the Measurement of Terrorism'
+date: 30 September 2023
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 1
+    number_sections: yes
+header-includes:
+- \usepackage{silence} # fewer warnings
+- \usepackage{inputenc} # encoding handling
+- \usepackage{amsmath}
+- \usepackage{amssymb}
+- \usepackage{booktabs}
+- \usepackage[labelfont=bf]{caption} # bold figure captions
+- \captionsetup[figure]{font=footnotesize} # smaller figure captions
+- \usepackage{floatrow} # for caps on top
+- \floatsetup[figure]{capposition=top} # caps on top
+- \floatsetup[table]{capposition=top} # caps on top
+- \usepackage[hang,flushmargin]{footmisc} # no indent footnotes 
+- \setlength{\footnotesep}{0.5cm} # vspace between footnotes
+- \usepackage{lscape} # landscape tables
+- \usepackage{hyperref} # links
+documentclass: article
+linestretch: 1.2
+indent: true
+geometry: margin=1.25in
+bibliography: plots.bib
+fontsize: 12pt
+link-citations: true
+linkcolor: blue
+---
+
+```{r setup, include=FALSE}
+
+# Default knitr settings
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.pos = "t")
+
+# No scientific notation
+options(scipen = 999)
+
+# Load libraries
+library(tidyverse)
+library(dplyr)
+library(kableExtra)
+library(ggpubr)
+library(ggplot2)
+library(here)
+library(glue)
+library(ggpubr)
+library(countrycode)
+library(scales)
+library(flextable)
+
+# Load datasets
+nesser <- read.csv(here("data/nesser_new.csv"), sep = ",")
+cren <- read.csv(here("data/crenshaw.csv"), sep = ",")
+poicn <- read.csv(here("data/poicn.csv"), sep = ",")
+iterate <- read.csv(here("data/iterate/iterate_1968_2016_clean.csv"))
+```
+
+\newpage
+# Dataset compilation procedures
+
+## Nesser
+
+The Nesser dataset is maintained by Petter Nesser at the Norwegian Defence Research Establishment (FFI) in Oslo. As per the documentation[^1], the data collection involves a five-stage procedure: initial collection of candidate cases through monitoring of international news sources, screening of cases for obvious non-terrorist events, in-depth searches on remaining cases in multiple languages and source types, coding of remaining cases, and updating of cases through news monitoring. Inclusion requires the existence of hard evidence that 1) a terrorist attack was planned, prepared, or launched, 2) a type of target had been identified, and 3) that clearly identifiable jihadis were involved. Conviction is ideally required, and cases with acquittal are excluded, but the dataset includes some cases that lack conviction for circumstantial reasons (such as plea deals, dead perpetrators, and cases awaiting trial). Cases are coded for 20 geotemporal and tactical variables, in addition to a reliability variable with a three-level scale reflecting degree of documentation ("Category 1", "Category 2", and "Category 3", with the latter representing weakly documented incidents). Coding has been done by the same individual (Petter Nesser) in consultation with the FFI research team for the entire collection period.
+
+[^1]: \hspace{0.5mm} See Petter Nesser, "Introducing the Jihadi Plots in Europe Dataset (JPED)", *Journal of Peace Research*, 2023 (Online First). We relied on the version deposited in the Journal of Peace Research Dataverse, more specifically the file `JPED_JPR_LIMITED_2022.csv`, extracted from \url{https://cdn.cloud.prio.org/files/5e04888f-0087-4035-b33f-13743664550d/Nesser_ReplicationFiles.zip} (downloaded on 20 July 2023).
+
+## Crenshaw
+c
+The Crenshaw dataset was developed by Martha Crenshaw (Stanford University), Eric Dahl (Naval Postgraduate School), and Margaret Wilson (Imperial College London) between 2012 and 2017 for a project funded by the National Consortium for the Study of Terrorism and Responses to Terrorism (START).[^2] Data collection ceased upon the project's completion. The collection procedure was broadly similar to that of Nesser. So were the inclusion criteria: Crenshaw includes plans or schemes to commit violent action where there is 1) evidence of intention to act, 2) evidence of further steps taken, and 3) evidence of jihadi ideological motivation. As in Nesser, convictions are an ideal, but not an absolute criterion. Incidents are coded for 17 geotemporal and outcome variables, but not for tactics or degrees of reliability. Cases are coded for degree of execution: Completed, successful, failed, and foiled. The coding was done primarily by research assistants.
+
+[^2]: \hspace{0.5mm} \vspace{0.5mm} For further details, see Martha Crenshaw, Erik Dahl, and Margaret A. Wilson, "Comparing Failed, Foiled, Completed and Successful Terrorist Attacks: Year 5 Final Report" (College Park, MD: National Consortium for the Study of Terrorism and Responses to Terrorism, December 2017), pp. 7-9. We used a version of the dataset shared with us via email in May 2019 by Margaret Wilson. The source files were titled `FFSC US list of cases May 2019.xlsx` and `FFSC WORLD list of cases May 2019.xlsx`.
+
+## POICN
+
+The POICN dataset was developed by Markus Bindner (University of Maryland) and Gary Ackerman (University of Albany) between 2013 and 2018 with funding from START, and collection for new years is ongoing.[^3] POICN built on an earlier resource, the Monterey WMD database, but vetted and expanded the latter with additional cases and variables. POICN appears to use a more extensive and systematic collection and coding procedure than the two other datasets, though it is similar in its core features. It collects open-source data from major search engines, notably the Open Source Enterprise, which monitors and translates newspapers worldwide in several tens of languages. POICN does not have an explicit definition of plot, but includes events that involve intentional use or planned use of violence by ideologically motivated non-state actors. Conviction is not required for inclusion. Cases are coded for 122 geospatial, temporal, motivational, operational, tactical, and consequence variables. It notably codes for event uncertainty in an elaborate way and for degree of execution on a seven-value scale. Coding is done by at least two coders working independently, with final decisions made by a database manager.
+
+[^3]: \hspace{0.5mm} \vspace{0.5mm} For further details, see Markus K. Binder and Gary A. Ackerman, "Pick Your POICN: Introducing the Profiles of Incidents involving CBRN and Non-State Actors (POICN) Database", *Studies in Conflict and Terrorism* (2019), pp. 4-10. We used version 2.581 (2019) obtained through START's regular application procedure in November 2019.
+
+# Dataset processing history
+
+Prior to conducting our analysis, we cleaned and processed the datasets in the following ways:
+
+## Nesser
+
+1. We excluded all of Nesser's "category 3" incidents out of concern for reliability.
+
+2. We transformed the spreadsheet from incident list format to country-year and country-year-month format, adding Western European countries with no recorded incidents (Greece, Iceland, Ireland, Luxembourg, and Portugal) for completeness.
+
+## Crenshaw
+
+1. We manually excluded a small number of incidents we consider clear coding errors.
+
+2. We excluded data from all countries outside Western Europe, North America, and Oceania for concerns about incomplete reporting.
+
+3. We excluded all incidents from 2017 because collection stopped in the spring of that year. 
+
+4. We created a new binary variable for execution (launched or foiled) and manually coded all incidents based on a reading of the vignettes. Crenshaw's original dataset codes for outcome, but the values are not mutually exclusive (several incidents are coded as both completed and foiled), and there were some coding errors.
+
+5. We transformed the spreadsheet from incident list format to country-year and country-year-month format. We added countries with no recorded incidents if they fell within Crenshaw's sampling scope ("NATO or EU countries, with the addition of Australia and New Zealand") and within our added restriction described in point 2) above.[^4]
+
+[^4]: \hspace{0.5mm} \vspace{0.5mm} Crenshaw et al, "Comparing Failed, Foiled, Completed and Successful Terrorist Attacks", p. 33. 
+
+## POICN
+
+1. We removed all incidents coded as having “considerable” (or less) inherent event uncertainty.
+ 
+2. We removed all incidents from 2017, because comprehensive collection stopped before the year's end.
+
+3. We created a new binary variable for execution (launched or foiled) and automatically recoded the incidents using POICN's degree of execution variable, considering values 1-4 as foiled and 4-7 as executed. 
+
+4. We transformed the spreadsheet from incident list format to country-year format. Since POICN's declared sampling scope is global, we added countries that were not listed with any incidents. For this we used the World Bank's list of 217 countries.  
+
+\newpage
+# Summary statistics of processed datasets
+
+\renewcommand{\arraystretch}{2}
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.height = 9, fig.width = 7.5} 
+
+#Create data frame
+table_1 <- data.frame("Dataset" = c("Nesser", "Crenshaw", "POICN"),
+                 "Years" = c(glue("{min(nesser$year)}-{max(nesser$year)}"), glue("{min(cren$year)}-{max(cren$year)}"), glue("{min(poicn$year)}-{max(poicn$year)}")),
+                 "Area" = c("Austria, Belgium, Denmark, Finland, France, Germany, Greece, Iceland, Ireland, Italy, Luxembourg, Netherlands, Norway, Portugal, Spain, Sweden, Switzerland, UK", "Australia, Austria, Belgium, Canada, Denmark, Finland, France, Germany, Greece, Iceland, Ireland, Italy, Luxembourg, Netherlands, New Zealand, Norway, Portugal, Spain, Sweden, UK, USA", "World"),
+                 "Plots" = c(sum(nesser$all), sum(cren$all), sum(poicn$all)),
+                 "Attacks" = c(sum(nesser$launched), sum(cren$launched), sum(poicn$launched)))
+
+#Make table
+kable(table_1, format = "latex", booktabs = TRUE, linesep = "\\addlinespace") %>%
+  kable_styling(font_size = 12, latex_options = "hold_position") %>%
+  column_spec(3, width = "20em")  %>%
+  row_spec(0, bold = TRUE)
+```
+
+\newpage
+# Cross-country associations by year
+
+\vspace{20pt}
+
+## Nesser dataset
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.height=9, fig.width=7.5} 
+
+# Recurring style element
+style <- theme(strip.background = element_rect(color = "white", fill = "white"),
+        plot.title = element_text(size = 20),
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+  
+#Nesser - grid of graphs by year
+ggplot(nesser, aes(launched, all)) +
+  geom_jitter(colour = "magenta", size = 2, alpha = 0.4, width = 0.01) +
+  geom_smooth(method = lm, lty = 2, colour = "black", size = 0.5, se = FALSE) +
+  xlab("Attacks") + ylab("Plots") +
+  stat_cor(aes(label = ..r.label..), label.x.npc = 0.5, label.y.npc = "bottom",
+           method = "pearson", cor.coef.name = "r", r.accuracy = 0.01, size = 5.5) +
+  theme_get() +
+  facet_wrap(~year, ncol = 4) +
+  style
+```
+
+## Crenshaw dataset
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.height=9, fig.width=7.5} 
+
+#Crenshaw - grid of graphs by year
+ggplot(cren, aes(launched, all)) +
+  geom_jitter(colour = "dodgerblue", size = 2, alpha = 0.4, width = 0.01) +
+  geom_smooth(method = lm, lty = 2, colour = "black", size = 0.5, se = FALSE) +
+  xlab("Attacks") + ylab("Plots") +
+  stat_cor(aes(label = ..r.label..), label.x.npc = 0.5, label.y.npc = "bottom",
+           method = "pearson", cor.coef.name = "r", r.accuracy = 0.01, size = 5.5) +
+  theme_get() +
+  facet_wrap(~year, ncol = 4) +
+  style
+```
+
+## POICN dataset
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.height=9, fig.width=7.5}
+
+#POICN - grid of graphs by year
+ggplot(poicn, aes(launched, all)) +
+  geom_jitter(colour = "green", size = 2, alpha = 0.4, width = 0.01) +
+  geom_smooth(method = lm, lty = 2, colour = "black", size = 0.5, se = FALSE) +
+  xlab("Attacks") + ylab("Plots") +
+  stat_cor(aes(label = ..r.label..), label.x.npc = 0.5, label.y.npc = "bottom",
+           method = "pearson", cor.coef.name = "r", r.accuracy = 0.01, size = 5.5) +
+  theme_get() + 
+  facet_wrap(~year, ncol = 4) +
+  style
+```
+
+# Histograms of country-year counts
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.height=8.5, fig.width=7.5}
+
+#Nesser - histogram of plot counts
+panel_1 <- ggplot(nesser, aes(x = all)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "magenta", bins = 12, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Plots") + ylab("") +
+  scale_x_continuous(breaks = seq(0, 11, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#Nesser - histogram of attack counts
+panel_2 <- ggplot(nesser, aes(x = launched)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "thistle2", bins = 9, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Attacks") + ylab("") +
+  scale_x_continuous(breaks = seq(0, 8, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#Combining the above to row of figures
+row_1 <- ggarrange(panel_1, panel_2, ncol = 2, nrow = 1, heights = c(2, 2)) %>%
+  annotate_figure(left = text_grob("Nesser     ", face = "bold", size = 11))
+
+#Crenshaw - histogram of plot counts
+panel_3 <- ggplot(cren, aes(x = all)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "blue", bins = 20, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Plots") + ylab("Percent") +
+  scale_x_continuous(breaks = seq(0, 19, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#Crenshaw - histogram of attack counts
+panel_4 <- ggplot(cren, aes(x = launched)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "lightskyblue1", bins = 10, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Attacks") + ylab("") +
+  scale_x_continuous(breaks = seq(0, 9, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#Combining the above to row of figures
+row_2 <- ggarrange(panel_3, panel_4, ncol = 2, nrow = 1, heights = c(2, 2)) %>%  
+  annotate_figure(left = text_grob("Crenshaw", face = "bold", size = 11))
+
+#POICN - histogram of plot counts
+panel_5 <- ggplot(poicn, aes(x = all)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "green4", bins = 22, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Plots") + ylab("") +
+  scale_x_continuous(breaks = seq(0, 21, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#POICN - histogram of attack counts
+panel_6 <- ggplot(poicn, aes(x = launched)) +
+  geom_histogram(aes(y = stat(count) / sum(count) * 100), fill = "palegreen", bins = 22, colour = "black", size = 0.2) +
+  theme_classic() +
+  xlab("Attacks") + ylab("") +
+  scale_x_continuous(breaks = seq(0, 21, 5)) +
+  scale_y_continuous(limits = c(0, 100))
+
+#Combining the above to row of figures
+row_3 <- ggarrange(panel_5, panel_6, ncol = 2, nrow = 1, heights = c(2, 2)) %>% 
+  annotate_figure(left = text_grob("POICN      ", face = "bold", size = 11))
+
+#Combining the three rows into grid
+ggarrange(row_1, row_2, row_3, ncol = 1, nrow = 3)
+```
+
+\newpage
+
+# Data sources for independent variables
+
+- **Population**: Population. Data from World Bank (indicator: `SP.POP.TOTL`) downloaded 21 July 2023 using the R package `WDI`.
+
+- **Muslims**: Percent Muslims of total population. Data from World Religion Database (https://worldreligiondatabase.org/), accessed 6 May 2020. Missing values imputed using linear interpolation in the R package `zoo`.
+
+- **Refugees**: Refugee population. Data from World Bank (indicator: `SM.POP.REFG`) downloaded 21 July 2023 using the R package `WDI`.
+
+- **GDP per capita**: GDP per capita in constant 2010 USD. Data from World Bank (indicator: `NY.GDP.PCAP.KD`) downloaded 21 July 2023 using the R package `WDI`.
+
+- **Unemployment**: Percent unemployment. Data from World Bank (indicator: `SL.UEM.TOTL.ZS`) downloaded 21 July 2023 using the R package `WDI`.
+
+- **CPI change**: Percent change in the consumer price index from the previous year. CPI data from OECD (indicator: `PRICES_CPI`) downloaded 21 July 2023 using the R package `oecd`.
+
+- **Social spending**: General government spending on social security as percent of GDP. Data from OECD (https://data.oecd.org/socialexp/social-spending.htm), retrieved 21 July 2023.
+
+- **Left-right government**: Political orientation of the cabinet, expressed on a 1-9 scale (higher = more right-wing). Data from ParlGov (http://www.parlgov.org/), retrieved 9 September 2023. Note that for technocratic governments in Italy and Austria, we replace values of '0' and code to the midpoint of the scale, i.e., 4.5. 
+
+- **Security budget**: General government spending on public order and safety as percent of GDP. Data from OECD (https://data.oecd.org/gga/general-government-spending.htm), retrieved 21 July 2023.
+
+- **Troops in Muslim World**: Total number of combat troops deployed to Muslim majority countries (UN missions included). Data extracted manually by Thomas Hegghammer from the International Institute for Strategic Studies' yearly publication series *The Military Balance*.
+
+- **Right wing attacks**: Number of fatal far-right terrorist attacks. Data from the RTV Dataset at the University of Oslo's Center for Research on Extremism (C-REX) (https://www.sv.uio.no/c-rex/english/groups/rtv-dataset/), retrieved 21 July 2023.
+
+Note that for a very small number of cells on some variables we have missing values. To avoid listwise deletion, we use a random forest algorithim implemented in the R package `missRanger`.
+
+\newpage
+
+# Alternative specifications
+
+```{r comment2, echo = FALSE}
+#The table below was produced in Stata. See the Stata .do file in the Github to reproduce the results.
+```
+
+\renewcommand{\arraystretch}{1}
+\begin{landscape}
+\begin{table}[]
+\centering
+\scriptsize
+\begin{tabular}{lccccccccc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Negative binomial fixed effects}} & \multicolumn{3}{c}{\textbf{OLS fixed effects}} & \multicolumn{3}{c}{\textbf{OLS fixed effects}} \\
+ & \textit{DV: Plots} & \textit{DV: Attacks} & $\chi^{2}$ & \textit{DV: Plots} & \textit{DV: Attacks} & $\chi^{2}$ & \textit{DV: asinh(Plots)} & \textit{DV: asinh(Attacks)} & $\chi^{2}$ \\ \midrule
+Lagged DV (asinh, t-1) & 0.254* & -0.043 & 3.37* & 0.928*** & -0.043 & 4.51** & 0.373*** & 0.250\textbackslash{}sym\{**\} & 1.72 \\
+ & (0.141) & (0.139) &  & (0.273) & (0.139) &  & (0.090) & (0.111) &  \\
+Population (log, t-1) & 2.945 & -9.025 & 4.27** & -1.798 & -0.974 & 2.13 & -0.709 & -0.556 & 0.41 \\
+ & (2.293) & (6.571) &  & (1.133) & (0.713) &  & (0.544) & (0.439) &  \\
+Muslims (\%, t-1) & 0.147 & 0.615 & 2.94* & -0.109 & -0.098 & 0.03 & 0.011 & -0.029 & 2.73* \\
+ & (0.225) & (0.437) &  & (0.174) & (0.118) &  & (0.062) & (0.056) &  \\
+Refugees (log, t-1) & -0.305* & -0.399 & 0.05 & -0.100 & -0.052 & 1.10 & -0.054 & -0.034 & 0.30 \\
+ & (0.182) & (0.540) &  & (0.093) & (0.057) &  & (0.042) & (0.027) &  \\
+GDP per capita (log, t-1) & 2.098 & -17.469** & 21.03*** & 0.180 & -0.368 & 1.51 & 0.295 & -0.172 & 2.11 \\
+ & (5.433) & (7.569) &  & (0.786) & (0.445) &  & (0.472) & (0.207) &  \\
+Unemployment (\%, t-1) & -0.020 & -0.140* & 3.19* & -0.052** & -0.029** & 3.74* & -0.024** & -0.019** & 2.44 \\
+ & (0.017) & (0.079) &  & (0.023) & (0.012) &  & (0.009) & (0.008) &  \\
+CPI change (\%, t-1) & 0.002 & -0.152 & 3.15* & 0.025 & 0.006 & 0.99 & 0.013 & 0.004 & 0.63 \\
+ & (0.073) & (0.119) &  & (0.028) & (0.015) &  & (0.014) & (0.007) &  \\
+Social spending (\%, t-1) & -0.012 & -0.271 & 6.99*** & 0.035 & 0.002 & 1.89 & 0.019 & 0.005 & 2.33 \\
+ & (0.162) & (0.209) &  & (0.041) & (0.023) &  & (0.015) & (0.010) &  \\
+Left/right government (log, t-1) & 0.009 & -0.345 & 0.59 & -0.255 & -0.141 & 0.51 & -0.032 & -0.022 & 0.05 \\
+ & (0.305) & (0.679) &  & (0.356) & (0.197) &  & (0.112) & (0.091) &  \\
+Security spending (\%, t-1) & 1.696*** & 1.991 & 0.08 & 0.411 & 0.198 & 1.75 & 0.285 & 0.090 & 3.04* \\
+ & (0.529) & (1.241) &  & (0.389) & (0.250) &  & (0.186) & (0.122) &  \\
+Troops in Muslim countries (asinh, t-1) & 0.436** & 0.817*** & 6.00** & 0.002 & 0.015 & 0.63 & 0.003 & 0.006 & 0.13 \\
+ & (0.188) & (0.236) &  & (0.031) & (0.020) &  & (0.013) & (0.009) &  \\
+Right wing attacks (sqrt, t-1) & -0.072 & 0.344 & 3.91** & -0.164 & -0.057 & 2.91* & -0.031 & 0.006 & 1.11 \\
+ & (0.073) & (0.250) &  & (0.151) & (0.125) &  & (0.044) & (0.053) &  \\
+Years from 9/11 & -0.057 & 0.598** & 7.52*** & -0.038 & 0.016 & 2.01 & -0.012 & 0.009 & 1.25 \\
+ & (0.140) & (0.302) &  & (0.044) & (0.021) &  & (0.023) & (0.012) &  \\
+Years from 9/11 (squared) & 0.005 & -0.019 & 2.44 & 0.006 & 0.001 & 2.90* & 0.002 & 0.001 & 0.45 \\
+ & (0.012) & (0.023) &  & (0.004) & (0.001) &  & (0.002) & (0.001) &  \\
+Years from ISIS caliphate & 0.587 & 1.495** & 3.92** & 0.279 & 0.227** & 0.22 & 0.123 & 0.112** & 0.03 \\
+ & (0.392) & (0.653) &  & (0.161) & (0.096) &  & (0.074) & (0.049) &  \\
+Years from ISIS caliphate (squared) & -0.102*** & -0.188*** & 8.64*** & -0.072** & -0.044** & 3.62* & -0.025** & -0.022*** & 0.49 \\
+ & (0.026) & (0.033) &  & (0.031) & (0.018) &  & (0.009) & (0.007) &  \\
+Country fixed intercepts & x & x &  & x & x &  & x & x &  \\ \midrule
+Country years & 486 & 486 &  & 486 & 486 &  & 486 & 486 &  \\ \bottomrule
+\multicolumn{10}{l}{Cluster robust standard errors in parentheses} \\
+\multicolumn{10}{l}{P-values (two-tailed); *p\textless{}0.10, **p\textless{}0.05, ***p\textless{}0.01}
+\end{tabular}
+\caption{\label{tab:predict_nb}Nesser data (Negative binomial and OLS)}
+\end{table}
+\end{landscape}
+
+\renewcommand{\arraystretch}{2}
+
+```{r comment3, echo = FALSE}
+#The table below was produced in Stata. See the Stata .do file in the Github to reproduce the results.
+```
+
+\renewcommand{\arraystretch}{1}
+
+\begin{landscape}
+\begin{table}[]
+\tiny
+\centering
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Poisson fixed effects}} & \multicolumn{3}{c}{\textbf{Negative binomial fixed effects}} & \multicolumn{3}{c}{\textbf{OLS fixed effects}} & \multicolumn{3}{c}{\textbf{OLS fixed effects}} \\
+\textit{} & \textit{DV: Plots} & \textit{DV: Attacks} & \textit{$\chi^{2}$} & \textit{DV: Plots} & \textit{DV: Attacks} & \textit{$\chi^{2}$} & \textit{DV: Plots} & \textit{DV: Attacks} & \textit{$\chi^{2}$} & \textit{DV: asinh(Plots)} & \textit{DV: asinh(Attacks)} & \textit{$\chi^{2}$} \\ \midrule
+Lagged DV (asinh, t-1) & 0.091 & 0.073 & 0.00 & 0.113 & 0.118 & 0.00 & 0.561** & 0.547* & 0.00 & 0.197** & 0.283* & 0.23 \\
+ & (0.208) & (0.402) &  & (0.198) & (0.367) &  & (0.223) & (0.302) &  & (0.085) & (0.160) &  \\
+Population (log, t-1) & -6.709 & -27.802* & 3.46* & -6.495 & -27.569* & 3.51* & -2.744 & -1.666 & 0.35 & -0.258 & -0.961 & 1.09 \\
+ & (6.567) & (14.228) &  & (6.823) & (14.186) &  & (3.005) & (1.457) &  & (1.099) & (0.780) &  \\
+Muslims (\%, t-1) & 0.055 & -0.323 & 0.72 & 0.077 & -0.306 & 0.72 & -0.290 & -0.206 & 0.34 & -0.013 & -0.073 & 0.97 \\
+ & (0.214) & (0.571) &  & (0.219) & (0.612) &  & (0.324) & (0.200) &  & (0.095) & (0.093) &  \\
+Refugees (log, t-1) & -0.501** & 0.430 & 2.60 & -0.542** & 0.333 & 2.05 & -0.051 & 0.024 & 0.48 & -0.042 & 0.011 & 1.47 \\
+ & (0.243) & (0.789) &  & (0.251) & (0.833) &  & (0.174) & (0.065) &  & (0.075) & (0.036) &  \\
+GDP per capita (log, t-1) & -1.423 & 2.341 & 3.76* & -1.773 & 2.051 & 3.68* & -1.273* & -0.465 & 5.71** & -0.733*** & -0.246 & 8.51*** \\
+ & (1.180) & (2.578) &  & (1.320) & (2.791) &  & (0.614) & (0.448) &  & (0.197) & (0.200) &  \\
+Unemployment (\%, t-1) & -0.114*** & -0.185 & 0.47 & -0.111*** & -0.189 & 0.52 & -0.097* & -0.045* & 4.52* & -0.034** & -0.025* & 2.00 \\
+ & (0.037) & (0.128) &  & (0.037) & (0.130) &  & (0.047) & (0.025) &  & (0.015) & (0.012) &  \\
+CPI change (\%, t-1) & -0.122 & 0.129 & 2.26 & -0.137 & 0.118 & 1.80 & 0.005 & 0.018 & 0.33 & -0.004 & 0.009 & 1.52 \\
+ & (0.115) & (0.233) &  & (0.132) & (0.277) &  & (0.040) & (0.020) &  & (0.019) & (0.013) &  \\
+Social spending (t-1) & 0.030 & 0.303** & 8.08*** & 0.037 & 0.320** & 5.50** & 0.018 & 0.005 & 0.34 & 0.014 & 0.008 & 0.33 \\
+ & (0.096) & (0.138) &  & (0.096) & (0.152) &  & (0.040) & (0.022) &  & (0.014) & (0.013) &  \\
+Left/right government (log, t-1) & -0.166 & 0.496 & 1.24 & -0.168 & 0.569 & 1.74 & -0.366 & -0.123 & 1.73 & -0.091 & -0.027 & 0.64 \\
+ & (0.318) & (0.669) &  & (0.329) & (0.646) &  & (0.310) & (0.125) &  & (0.131) & (0.063) &  \\
+Security spending (t-1) & 2.160*** & 1.722 & 0.10 & 1.955** & 1.757 & 0.02 & 0.656 & 0.345 & 0.70 & 0.178 & 0.170 & 0.00 \\
+ & (0.787) & (1.630) &  & (0.828) & (1.502) &  & (0.686) & (0.316) &  & (0.277) & (0.180) &  \\
+Troops in Muslim countries (asinh, t-1) & 0.701** & 0.086 & 10.39*** & 0.638* & 0.047 & 10.53*** & 0.038 & 0.017 & 0.72 & 0.011 & 0.005 & 0.27 \\
+ & (0.296) & (0.373) &  & (0.331) & (0.310) &  & (0.044) & (0.022) &  & (0.017) & (0.013) &  \\
+Right wing attacks (sqrt, t-1) & -0.213 & 0.173 & 3.25* & -0.138 & 0.219 & 4.48** & -0.368 & -0.094 & 3.19* & -0.072 & -0.020 & 1.35 \\
+ & (0.232) & (0.315) &  & (0.241) & (0.269) &  & (0.220) & (0.063) &  & (0.074) & (0.038) &  \\
+Years from 9/11 & 0.419 & 0.183 & 0.61 & 0.485 & 0.255 & 0.44 & 0.220** & 0.091 & 6.04** & 0.122*** & 0.047 & 15.40*** \\
+ & (0.314) & (0.560) &  & (0.323) & (0.637) &  & (0.103) & (0.062) &  & (0.032) & (0.029) &  \\
+Years from 9/11 (squared) & -0.023 & -0.006 & 0.69 & -0.027 & -0.011 & 0.41 & -0.006 & -0.001 & 1.88 & -0.006** & -0.001 & 8.40** \\
+ & (0.021) & (0.038) &  & (0.022) & (0.044) &  & (0.004) & (0.002) &  & (0.002) & (0.001) &  \\
+Years from ISIS caliphate & 3.130*** & 2.713* & 0.37 & 3.284*** & 3.027 & 0.04 & 2.226* & 0.753 & 5.44** & 1.031*** & 0.463* & 4.31** \\
+ & (0.956) & (1.397) &  & (1.031) & (2.014) &  & (1.063) & (0.487) &  & (0.351) & (0.241) &  \\
+Years from ISIS caliphate (squared) & -0.967*** & -0.688* & 1.14 & -1.055*** & -0.823 & 0.20 & -0.880 & -0.284 & 3.95** & -0.440*** & -0.199 & 3.81* \\
+ & (0.283) & (0.382) &  & (0.341) & (0.685) &  & (0.519) & (0.251) &  & (0.141) & (0.121) &  \\
+Country fixed intercepts & X & X &  & X & X &  & X & X &  & X & X &  \\ \midrule
+Country years & 338 & 338 &  & 338 & 338 &  & 338 & 338 &  & 338 & 338 &  \\ \bottomrule
+\multicolumn{13}{l}{Cluster robust standard errors in parentheses} \\
+\multicolumn{13}{l}{p-values (two-tailed); *p\textless{}0.10, **p\textless{}0.05, ***p\textless{}0.01}
+\end{tabular}
+\caption{\label{tab:predict_cren}Crenshaw data (Poisson, negative binomial, and OLS).}
+\end{table}
+\end{landscape}
+
+\newpage
+
+# ITERATE plot count comparison with Nesser
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.height=7.5, fig.width=7.5, fig.pos="t", fig.cap = "Foiled vs launched counts in ITERATE and Nesser over time"}
+
+# create vars for foiled and launched
+iterate$foiled <- 0
+iterate$foiled[iterate$terrorist_logistical_success %in% 0:2] <- 1
+iterate$launched <- 0
+iterate$launched[!iterate$terrorist_logistical_success %in% 0:2] <- 1
+iterate$all <- iterate$foiled + iterate$launched
+#iterate$country <- iterate$location_end 
+iterate$country <- iterate$location_start
+
+it_y <- iterate %>% 
+  group_by(year) %>% 
+  summarise(foiled = sum(foiled), launched = sum(launched), all = sum(all))
+
+it_y_long <- pivot_longer(it_y, cols = c(foiled, launched), names_to = "outcome")
+
+it_y_01_16 <- it_y %>% 
+  filter(year %in% 2001:2016)
+
+it_y_01_16_long <- it_y_01_16 %>% pivot_longer(cols = c(foiled, launched), names_to = "outcome")
+
+# create country-year df
+it_cy <- iterate %>%
+  group_by(country, year) %>% 
+  summarize(launched=sum(launched), all=sum(all)) %>%
+  complete(year=1968:2016, fill = list(launched=0, all=0))
+  
+# Get country names for matching with Nesser
+it_cy$countryname <- countrycode(it_cy$country, origin = "cown" , destination = "country.name")
+it_cy$countryname[it_cy$countryname == "United Kingdom"] <- "UK"
+nesser_countries <- unique(nesser$country)
+
+it_y_eu_01_16 <- it_cy %>% 
+  mutate(foiled = all - launched) %>% 
+  filter(countryname %in% nesser_countries) %>%
+  filter(year %in% 2001:2016) %>% 
+  group_by(year) %>% 
+  summarise(foiled = sum(foiled), launched = sum(launched)) %>%
+  pivot_longer(cols = c(foiled, launched), names_to = "outcome")
+
+nesser_y_01_16 <- nesser %>% 
+  group_by(year) %>% 
+  summarise(foiled = sum(foiled), launched = sum(launched)) %>% 
+  filter(year %in% 2001:2016) %>% 
+  pivot_longer(cols = c(foiled, launched), names_to = "outcome")
+
+## graphs
+
+row_1 <- ggplot(it_y_long, aes(x = year, y = value, fill=factor(outcome, levels=c("launched", "foiled")))) + 
+  geom_bar(position='stack', stat='identity') +
+  scale_fill_manual(values = c("orange1", "orange4")) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,600), breaks = seq(0, 600, 50), expand = c(0,0)) +
+  labs(title = "ITERATE worldwide 1968-2016 (international terrorism, all ideologies)", x = "", y = "") +
+  theme_light() +
+  theme(legend.title=element_blank(), legend.position=c(.8, .7), legend.background = element_blank())
+
+panel_1 <- ggplot(it_y_eu_01_16, aes(x = year, y = value, fill=factor(outcome, levels=c("launched", "foiled")))) + 
+  geom_bar(position='stack', stat='identity') +
+  scale_fill_manual(values = c("orange1", "orange4")) +
+  scale_x_continuous(breaks = c(2005, 2010, 2015), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,35), breaks = seq(0, 30, 5), expand = c(0,0)) +
+  labs(title = "ITERATE Western Europe 2001-2016", subtitle = "International terrorism, all ideologies", x = "", y = "") +
+  theme_light() +
+  theme(legend.title=element_blank(), legend.position=c(.8, .7), legend.background = element_blank())
+
+panel_2 <- ggplot(nesser_y_01_16, aes(x = year, y = value, fill=factor(outcome, levels=c("launched", "foiled")))) + 
+  geom_bar(position='stack', stat='identity') +
+  scale_fill_manual(values = c("lightgreen", "green4")) +
+  scale_x_continuous(breaks = c(2005, 2010, 2015), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,35), breaks = seq(0, 30, 5), expand = c(0,0)) +
+  labs(title = "Nesser Western Europe 2001-2016", subtitle = "Jihadi groups only", x = "", y = "") +
+  theme_light() +
+  theme(legend.title=element_blank(), legend.position=c(.8, .7), legend.background = element_blank())
+
+row_2 <- ggarrange(panel_1, panel_2, ncol = 2, nrow = 1)
+  
+ggarrange(row_1, row_2, ncol = 1, nrow = 2)
+```
